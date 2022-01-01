@@ -6,6 +6,7 @@ const Discord = require('discord.js');
 const { dbConnection } = require('./config_database');
 const Ticket = require('./models/ticket');
 const Channel = require('./models/channel');
+const keepAlive = require('./server');
 
 const client = new Discord.Client();
 
@@ -171,4 +172,5 @@ const searchAndStoreInDB = (user_id, tickets, memb, msg) =>
     });
 }
 
+keepAlive();
 client.login(process.env.TOKEN);
