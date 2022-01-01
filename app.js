@@ -119,19 +119,16 @@ client.on('message', async(message) =>
 
         if(command == 'S!close')
         {
-            if(message.member.hasPermission('ADMINISTRATOR'))
-            {
-                const channels = await Channel.find();
+            const channels = await Channel.find();
 
-                channels.forEach(async(element) => 
+            channels.forEach(async(element) => 
+            {
+                if(message.channel.id === element.channel_id)
                 {
-                    if(message.channel.id === element.channel_id)
-                    {
-                        message.channel.delete();
-                        await Channel.findByIdAndDelete(element._id);
-                    }
-                });
-            }
+                    message.channel.delete();
+                    await Channel.findByIdAndDelete(element._id);
+                }
+            });
         }
     }
 });
