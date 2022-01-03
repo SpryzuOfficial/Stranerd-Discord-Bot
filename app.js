@@ -6,6 +6,7 @@ const Discord = require('discord.js');
 const { dbConnection } = require('./config_database');
 const Ticket = require('./models/ticket');
 const Channel = require('./models/channel');
+const Message = require('./models/message');
 const keepAlive = require('./server');
 
 const client = new Discord.Client();
@@ -33,11 +34,18 @@ client.on('message', async(message) =>
     {
         if(command == 'S!joinmsg')
         {
-            new_msg = {"join_msg": args.join(" ")};
+            const join_message = args.join(" ");
+            if(join_message)
+            {
+                await Message.deleteMany({});
 
-            message.channel.send('The new message will be: `' + args.join(" ") + '`');
-            
-            fs.writeFileSync('config.json', JSON.stringify(new_msg));
+                console.log(join_message);
+
+                const msg = new Message({join_message});
+                await msg.save();
+
+                message.channel.send('The new message will be: `' + join_message + '`');
+            }
         }
 
         if(command == 'S!givetickets')
@@ -134,16 +142,18 @@ client.on('message', async(message) =>
     }
 });
 
-client.on('guildMemberAdd', member =>
+client.on('guildMemberAdd', async(member) =>
 {
     const channel = member.guild.channels.cache.find(ch => ch.id === process.env.GENERAL_C);
-
-    if (channel) 
+        
+    if(channel)
     {
-        const j_msg = JSON.parse(fs.readFileSync('config.json')).join_msg;
-        console.log(j_msg);
-        channel.send(`Welcome to the server, ${member}`);
-        member.send(j_msg);
+        (await Message.find()).forEach((element) =>
+        {
+            console.log(element.join_message);
+            channel.send(`Welcome to the server, ${member}`);
+            member.send(element.join_message);
+        });
     }
 });
 
@@ -172,5 +182,10 @@ const searchAndStoreInDB = (user_id, tickets, memb, msg) =>
     });
 }
 
-keepAlive();
+if(process.env.PRODUCTION == 0)
+{
+    console.log('Production mode');
+    keepAlive();
+}
+
 client.login(process.env.TOKEN);
